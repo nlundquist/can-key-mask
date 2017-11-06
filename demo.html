@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>can-key-mask demo page</title>
+</head>
+<body>
+  <h1>Demo</h1>
+
+  <label for="pattern">Pattern Key Mask: </label>
+  <input type="text" id="pattern" key-mask-pattern="+1 (999)-999-9999" />
+</body>
+<script src="node_modules/steal/steal-sans-promises.js" data-main="@empty">
+  import KeyMask from 'can-key-mask/key-mask';
+
+  // demo using vanilla JS api
+  new KeyMask(document.getElementById('pattern'));
+
+  // demo using can view attr api
+  // TODO: add this example
+</script>
+</html>
