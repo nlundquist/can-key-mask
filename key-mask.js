@@ -2,10 +2,8 @@
  * Created by Nils Lundquist (nils@bitovi.com) on 2017-11-04.
  */
 
-import { getPatternMasker, getPatternInserter } from 'can-key-mask/masks/pattern';
+import { getPatternMasker, getPatternReplacer } from 'can-key-mask/masks/pattern';
 
-// TODO: work with editing inside of the string
-// TODO: fix bug with space
 // TODO: test uppercase (key vs char usage)
 // TODO: Firefox, Safari & IE testing of existing functionality
 // TODO: mask placeholder functionality
@@ -59,15 +57,15 @@ function hasConfiguration() {
   return configurationValid
 }
 
+// TODO: synthesize change event in IE11? check if required
 // add multiple characters to input
-function insertCharacters(chars) {
-  if (chars && chars.length) {
+function replaceValue(newValue) {
+  if (newValue) {
     const start = this.element.selectionStart;
     const end = this.element.selectionEnd;
-    const val = this.element.value;
-    const str = chars.join('');
-
-    this.element.value = `${val.slice(0, start)}${str}${val.slice(end)}`;
+    const growth = newValue.length - this.element.value.length;
+    this.element.value = newValue;
+    this.element.setSelectionRange(start+growth, end+growth);
   }
 }
 
@@ -77,10 +75,9 @@ function setupEvents() {
     if (this.masker(ev)) {
       ev.preventDefault();
 
-      // if inserting fixed characters from the pattern before the current keystroke validates the pattern,
-      // add those characters
-      if (this.inserter) {
-        this.insertCharacters(this.inserter(ev));
+      // if reformatting input with the fixed characters from the pattern validates the string, replace the current value
+      if (this.replacer) {
+        this.replaceValue(this.replacer(ev));
       }
     }
   };
@@ -94,7 +91,7 @@ function KeyMask(element) {
   this.element = element;
   this.config = this.getMaskConfiguration();
   this.masker = null; // function that decide if character is permitted to be inserted
-  this.inserter = null; // function that insert additional characters if keypress doesn't insert as normal
+  this.replacer = null; // function that reformats the input if keypress doesn't insert as normal
 
   const valid = this.validateElement() && this.hasConfiguration();
 
@@ -102,7 +99,7 @@ function KeyMask(element) {
     if (this.config.pattern) {
       this.masker = this.getPatternMasker();
       if (this.config.insertStaticCharacters) {
-        this.inserter = this.getPatternInserter();
+        this.replacer = this.getPatternReplacer();
       }
     }
 
@@ -115,10 +112,10 @@ Object.assign(KeyMask.prototype, {
   validateElement,
   hasConfiguration,
   getPatternMasker,
-  getPatternInserter,
+  getPatternReplacer,
   warn,
   setupEvents,
-  insertCharacters,
+  replaceValue,
 });
 
 export default KeyMask;

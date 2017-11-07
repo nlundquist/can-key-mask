@@ -18,6 +18,6 @@
   },
   "dependencies": {
     "can-view-callbacks": "^3.2.3",
-    "lodash.takewhile": "^4.6.0"
+    "lodash.zip": "^4.2.0"
   }
 }
