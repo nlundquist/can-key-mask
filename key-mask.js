@@ -2,6 +2,7 @@
  * Created by Nils Lundquist (nils@bitovi.com) on 2017-11-04.
  */
 
+import assign from 'lodash.assign';
 import { getPatternMasker, getPatternReplacer } from 'can-key-mask/masks/pattern';
 
 // TODO: test uppercase (key vs char usage)
@@ -107,7 +108,7 @@ function KeyMask(element) {
   }
 }
 
-Object.assign(KeyMask.prototype, {
+assign(KeyMask.prototype, {
   getMaskConfiguration,
   validateElement,
   hasConfiguration,

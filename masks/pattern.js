@@ -63,7 +63,6 @@ function getPatternMasker() {
 // return a function that, if possible, reformats the result of the current keystroke to pass validation
 function getPatternReplacer() {
   const patternParts = parsePattern(this.config.pattern);
-  const fixedCharacters = patternParts.filter(p => p.type === 'static').map(p => p.character);
   const valid = getValidationRegex(patternParts);
 
   return (ev) => {

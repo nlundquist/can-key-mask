@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "can-view-callbacks": "^3.2.3",
+    "lodash.assign": "^4.2.0",
     "lodash.zip": "^4.2.0"
   }
 }
