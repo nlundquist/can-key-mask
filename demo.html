@@ -19,13 +19,22 @@
 </body>
 <script src="node_modules/steal/steal.js" data-main="@empty">
   import 'babel-polyfill'; // for IE11 compatibility
+  import 'can-key-mask'; // to include handler for can-view attr usage example
   import KeyMask from 'can-key-mask/key-mask';
+  import stache from 'can-stache';
 
   // demos using vanilla JS api
   new KeyMask(document.getElementById('phone'));
   new KeyMask(document.getElementById('postal'));
 
-  // demo using can view attr api
-  // TODO: add this example
+  // demo using can-view attr api
+  const template = stache(`
+    <br/>
+
+    <label for="stache">Attr-API Phone Key Mask: </label>
+    <input type="text" id="postal" key-mask="+1 (999)-999-9999" />
+    <div>+1 (999)-999-9999</div>
+  `);
+  document.body.appendChild(template());
 </script>
 </html>

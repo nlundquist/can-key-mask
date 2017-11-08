@@ -8,7 +8,6 @@ import { getPatternMasker, getPatternReplacer } from 'can-key-mask/masks/pattern
 // TODO: paste event / autofill support (non-IE only)
 // TODO: mask placeholder functionality
 // TODO: setup testing for local puppeteer & remote browser stack testing
-// TODO: handle unbinding
 // TODO: multiple masks per input?
 // TODO: include pre-configured "keyword" masks?
 // TODO: support for other keyboards / non-ascii
@@ -57,6 +56,7 @@ function hasConfiguration() {
 }
 
 // TODO: synthesize change event in IE11? check if required
+// TODO: could have better naming or remove expectation of 1 character increase?
 // add multiple characters to input
 function replaceValue([newValue, insertionPosition]) {
   if (newValue) {
@@ -81,6 +81,16 @@ function setupEvents() {
   this.element.addEventListener('keypress', this.keypressHandler);
 
   //TODO: add paste event
+  //TODO: add input event if needed to handle autofill
+}
+
+function tearDownEvents() {
+  this.element.removeEventListener('keypress', this.keypressHandler);
+}
+
+function destroy() {
+  this.tearDownEvents();
+  delete this.element;
 }
 
 function KeyMask(element) {
@@ -111,6 +121,7 @@ assign(KeyMask.prototype, {
   getPatternReplacer,
   warn,
   setupEvents,
+  tearDownEvents,
   replaceValue,
 });
 
