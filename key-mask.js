@@ -5,11 +5,9 @@
 import assign from 'lodash.assign';
 import { getPatternMasker, getPatternReplacer } from 'can-key-mask/masks/pattern';
 
-// TODO: test uppercase (key vs char usage)
-// TODO: Firefox, Safari & IE testing of existing functionality
+// TODO: paste event / autofill support (non-IE only)
 // TODO: mask placeholder functionality
 // TODO: setup testing for local puppeteer & remote browser stack testing
-// TODO: paste event support (non-IE only)
 // TODO: handle unbinding
 // TODO: multiple masks per input?
 // TODO: include pre-configured "keyword" masks?
@@ -60,13 +58,10 @@ function hasConfiguration() {
 
 // TODO: synthesize change event in IE11? check if required
 // add multiple characters to input
-function replaceValue(newValue) {
+function replaceValue([newValue, insertionPosition]) {
   if (newValue) {
-    const start = this.element.selectionStart;
-    const end = this.element.selectionEnd;
-    const growth = newValue.length - this.element.value.length;
     this.element.value = newValue;
-    this.element.setSelectionRange(start+growth, end+growth);
+    this.element.setSelectionRange(insertionPosition+1, insertionPosition+1);
   }
 }
 

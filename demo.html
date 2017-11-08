@@ -7,14 +7,23 @@
 <body>
   <h1>Demo</h1>
 
-  <label for="pattern">Pattern Key Mask: </label>
-  <input type="text" id="pattern" key-mask-pattern="+1 (999)-999-9999" />
+  <label for="phone">Phone Pattern Key Mask: </label>
+  <input type="text" id="phone" key-mask-pattern="+1 (999)-999-9999" />
+  <div>+1 (999)-999-9999</div>
+
+  <br/>
+
+  <label for="postal">Canadian Postal Code Pattern Key Mask: </label>
+  <input type="text" id="postal" key-mask-pattern="A9A 9A9" />
+  <div>A9A 9A9</div>
 </body>
-<script src="node_modules/steal/steal-sans-promises.js" data-main="@empty">
+<script src="node_modules/steal/steal.js" data-main="@empty">
+  import 'babel-polyfill'; // for IE11 compatibility
   import KeyMask from 'can-key-mask/key-mask';
 
-  // demo using vanilla JS api
-  new KeyMask(document.getElementById('pattern'));
+  // demos using vanilla JS api
+  new KeyMask(document.getElementById('phone'));
+  new KeyMask(document.getElementById('postal'));
 
   // demo using can view attr api
   // TODO: add this example
