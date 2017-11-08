@@ -5,6 +5,8 @@
 import KeyMask from './key-mask';
 import callbacks from 'can-view-callbacks';
 
+// TODO: write readme
+
 callbacks.attr('key-mask', function(el) {
   const keymask = new KeyMask(el);
   const removeHandler = () => {
