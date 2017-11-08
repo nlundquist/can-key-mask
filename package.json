@@ -24,10 +24,10 @@
     "testee": "^0.7.0"
   },
   "dependencies": {
-    "can-view-callbacks": "^3.2.3",
-    "lodash.assign": "^4.2.0",
-    "lodash.escaperegexp": "^4.1.2",
-    "lodash.flatten": "^4.4.0"
+    "can-view-callbacks": "3.x",
+    "lodash.assign": "4.x",
+    "lodash.escaperegexp": "4.x",
+    "lodash.flatten": "4.x"
   },
   "steal": {
     "map": {
