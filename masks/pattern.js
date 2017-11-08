@@ -6,6 +6,7 @@ import escapeRegExp from 'lodash.escaperegexp';
 import flatten from 'lodash.flatten';
 
 // TODO: keep existing dynamic characters in current group when reformatting / reformat per-group
+// TODO: bug when pattern is invalidated and an edit is made (resets input)
 // TODO: multiple pattern support?
 // TODO: allow new & replacement of character classes
 
