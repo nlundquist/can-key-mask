@@ -6,11 +6,12 @@ import assign from 'lodash.assign';
 import { getPatternMasker, getPatternReplacer } from 'can-key-mask/masks/pattern';
 
 // TODO: paste event / autofill support (non-IE only)
+// TODO: add API to get unmasked value
 // TODO: mask placeholder functionality
 // TODO: setup testing for local puppeteer & remote browser stack testing
 // TODO: multiple masks per input?
 // TODO: include pre-configured "keyword" masks?
-// TODO: support for other keyboards / non-ascii
+// TODO: support for other keyboards / non-ascii?
 
 // print nice plugin specific warning messages
 function warn(message) {
@@ -72,7 +73,7 @@ function setupEvents() {
       ev.preventDefault();
 
       // if reformatting input with the fixed characters from the pattern validates the string, replace the current value
-      if (this.replacer) {
+      if (this.replacer && this.element.value.length < this.config.pattern.length) {
         this.replaceValue(this.replacer(ev));
       }
     }

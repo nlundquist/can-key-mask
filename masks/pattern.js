@@ -5,12 +5,14 @@
 import escapeRegExp from 'lodash.escaperegexp';
 import flatten from 'lodash.flatten';
 
+// TODO: keep existing dynamic characters in current group when reformatting / reformat per-group
 // TODO: multiple pattern support?
-// TODO: allow custom character classes
+// TODO: allow new & replacement of character classes
 
 const characterClasses = {
   '9': new RegExp('[\\d]'), // any digit
   'A': new RegExp('[A-Za-z]'), // any alpha character
+  'U': new RegExp('[A-Z]'), // any uppercase alpha character
 };
 
 function validatePatternConfig() {
@@ -28,7 +30,7 @@ function parsePattern(pattern) {
       parts.push({ regex: charClass, type: 'class' });
     } else {
       // non-class character
-      parts.push({ regex: new RegExp(`[${escapeRegExp(char)}]`), type: 'static', character: char});
+      parts.push({ regex: new RegExp(`${escapeRegExp(char)}`), type: 'static', character: char});
     }
   }
 
