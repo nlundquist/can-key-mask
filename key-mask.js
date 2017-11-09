@@ -13,6 +13,8 @@ import { getPatternMasker, getPatternReplacer } from 'can-key-mask/masks/pattern
 // TODO: include pre-configured "keyword" masks?
 // TODO: support for other keyboards / non-ascii?
 
+const isIE = (navigator.userAgent.indexOf('MSIE') !== -1 || navigator.appVersion.indexOf('Trident/') > 0);
+
 // print nice plugin specific warning messages
 function warn(message) {
   console.log(
@@ -56,13 +58,16 @@ function hasConfiguration() {
   return configurationValid
 }
 
-// TODO: synthesize change event in IE11? check if required
 // TODO: could have better naming or remove expectation of 1 character increase?
 // add multiple characters to input
 function replaceValue([newValue, insertionPosition]) {
   if (newValue) {
     this.element.value = newValue;
     this.element.setSelectionRange(insertionPosition+1, insertionPosition+1);
+
+    // set flag so synthesized change event for IE is thrown during blur
+    // setting element.value prevents IE from throwing a change event as it should
+    if (isIE) { this.sendFakeChange = true; }
   }
 }
 
@@ -79,7 +84,17 @@ function setupEvents() {
     }
   };
 
+  this.blurHandler = () => {
+    if (this.sendFakeChange) {
+      delete this.sendFakeChange;
+      const event = document.createEvent('Event');
+      event.initEvent('change', true, false);
+      this.element.dispatchEvent(event);
+    }
+  };
+
   this.element.addEventListener('keypress', this.keypressHandler);
+  if (isIE) { this.element.addEventListener('blur', this.blurHandler); }
 
   //TODO: add paste event
   //TODO: add input event if needed to handle autofill
@@ -87,6 +102,7 @@ function setupEvents() {
 
 function tearDownEvents() {
   this.element.removeEventListener('keypress', this.keypressHandler);
+  if (this.blurHandler) { this.element.removeEventListener('blur', this.blurHandler); }
 }
 
 function destroy() {
