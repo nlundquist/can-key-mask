@@ -123,6 +123,7 @@ assign(KeyMask.prototype, {
   warn,
   setupEvents,
   tearDownEvents,
+  destroy,
   replaceValue,
 });
 
