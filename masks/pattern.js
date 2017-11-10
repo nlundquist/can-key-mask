@@ -100,6 +100,7 @@ function getPatternReplacer() {
   const patternParts = parsePattern(this.config.pattern);
   const valid = getValidationRegex(patternParts);
   const [decomposer, decomposedGroupTypes] = getDecomposingRegex(patternParts);
+  const maxDynamicCharacters = patternParts.filter((p) => p.type === 'class').length;
 
   return (ev) => {
     const currentString = this.element.value;
@@ -111,6 +112,7 @@ function getPatternReplacer() {
     // since we are splicing into the set of dynamic characters, adjust insertion (selectionStart) position for preceding static characters
     let stringIndex = 0;
     let selectionStart = this.element.selectionStart;
+    let selectionEnd = this.element.selectionEnd;
     const insertionPosition = capturedGroups.reduce((ret, group, i) => {
       group.forEach(() => {
         if (decomposedGroupTypes[i] === 'static' && stringIndex < selectionStart) { ret--; }
@@ -119,7 +121,10 @@ function getPatternReplacer() {
       return ret;
     }, selectionStart);
 
-    dynamicCharacters.splice(insertionPosition, 0, ev.key);
+    dynamicCharacters.splice(insertionPosition, selectionEnd - selectionStart, ev.key);
+
+    // if we've ended up with more characters than we have spaces for, don't bother reformatting
+    if (dynamicCharacters.length > maxDynamicCharacters) { return [null, null]; }
 
     // create a new string by putting the non-fixed chars into non-fixed character positions
     let index = 0;

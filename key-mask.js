@@ -78,7 +78,7 @@ function setupEvents() {
       ev.preventDefault();
 
       // if reformatting input with the fixed characters from the pattern validates the string, replace the current value
-      if (this.replacer && this.element.value.length < this.config.pattern.length) {
+      if (this.replacer) {
         this.replaceValue(this.replacer(ev));
       }
     }
