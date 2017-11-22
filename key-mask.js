@@ -3,9 +3,10 @@
  */
 
 import assign from 'lodash.assign';
-import { getPatternMasker, getPatternReplacer } from 'can-key-mask/masks/pattern';
+import dropWhile from 'lodash.dropwhile';
+import dropRightWhile from 'lodash.droprightwhile';
+import { getPatternFormatter, getPatternValidator } from "./masks/pattern";
 
-// TODO: paste event / autofill support (non-IE only)
 // TODO: add API to get unmasked value
 // TODO: mask placeholder functionality
 // TODO: setup testing for local puppeteer & remote browser stack testing
@@ -60,28 +61,47 @@ function hasConfiguration() {
 
 // TODO: could have better naming or remove expectation of 1 character increase?
 // add multiple characters to input
-function replaceValue([newValue, insertionPosition]) {
+function syncValue([newValue, newCaretPosition]) {
   if (newValue) {
     this.element.value = newValue;
-    this.element.setSelectionRange(insertionPosition+1, insertionPosition+1);
+    this.element.setSelectionRange(newCaretPosition, newCaretPosition);
 
     // set flag so synthesized change event for IE is thrown during blur
     // setting element.value prevents IE from throwing a change event as it should
     if (isIE) { this.sendFakeChange = true; }
+    return true;
+  } else {
+    return false;
   }
 }
 
 function setupEvents() {
-  this.keypressHandler = (ev) => {
-    // if the keystroke would invalidate the pattern, prevent it
-    if (this.masker(ev)) {
-      ev.preventDefault();
+  this.element.oldValue = this.element.value;
 
-      // if reformatting input with the fixed characters from the pattern validates the string, replace the current value
-      if (this.replacer) {
-        this.replaceValue(this.replacer(ev));
-      }
+  // check if value following input is valid, if not, reformat, if still not valid, revert state
+  // keeps last valid value in element.oldValue
+  // sets value & caret position via syncValue
+  this.inputHandler = () => {
+    let validValue = this.validator();
+
+    // if the new value in the element doesn't validate, attempt to reformat it
+    if (validValue) {
+      this.element.oldValue = this.element.value;
+      return;
     }
+
+    const stringChanges = this.getStringChanges();
+    validValue = this.syncValue(this.formatter(stringChanges));
+
+    // if input was valid, or was reformatted to be valid, keep it, else revert to last value
+    if (validValue) {
+      this.element.oldValue = this.element.value;
+      return;
+    }
+
+    // if value is invalid, return input to last value & persist caret position
+    const revertedCaretPosition = this.element.selectionStart - stringChanges.newCharacters.length;
+    this.syncValue([this.element.oldValue, revertedCaretPosition]);
   };
 
   this.blurHandler = () => {
@@ -93,16 +113,14 @@ function setupEvents() {
     }
   };
 
-  this.element.addEventListener('keypress', this.keypressHandler);
+  this.element.addEventListener('input', this.inputHandler);
   if (isIE) { this.element.addEventListener('blur', this.blurHandler); }
-
-  //TODO: add paste event
-  //TODO: add input event if needed to handle autofill
 }
 
 function tearDownEvents() {
-  this.element.removeEventListener('keypress', this.keypressHandler);
-  if (this.blurHandler) { this.element.removeEventListener('blur', this.blurHandler); }
+  delete this.element.oldValue;
+  this.element.removeEventListener('input', this.inputHandler);
+  this.element.removeEventListener('blur', this.blurHandler);
 }
 
 function destroy() {
@@ -110,20 +128,54 @@ function destroy() {
   delete this.element;
 }
 
+// returns an object with details about characters added to the string, characters replaced, and position that occurred at
+function getStringChanges() {
+  const oldString = this.element.oldValue;
+  const currentString = this.element.value;
+
+  // trim matching any matching prefix and suffix from current string
+  let prefixSize = 0;
+  let suffixSize = 0;
+  let newCharacters = dropWhile(currentString, (char, i) => {
+    if (char === oldString[i]) {
+      prefixSize++;
+      return true;
+    }
+    return false;
+  });
+
+  // need to remove prefix characters before checking for suffix
+  let trimmedOldString = oldString.slice(prefixSize);
+  newCharacters = dropRightWhile(newCharacters, (char, i) => {
+    if (char === trimmedOldString[trimmedOldString.length - (newCharacters.length - i)]) {
+      suffixSize++;
+      return true;
+    }
+    return false;
+  });
+
+  // need to remove suffix to see if we're replacing characters
+  trimmedOldString = trimmedOldString.slice(0, trimmedOldString.length - suffixSize);
+
+  return {
+    newCharacters,
+    replacedCharacters: trimmedOldString,
+    prefixSize,
+    suffixSize,
+  }
+}
+
 function KeyMask(element) {
   this.element = element;
   this.config = this.getMaskConfiguration();
-  this.masker = null; // function that decide if character is permitted to be inserted
-  this.replacer = null; // function that reformats the input if keypress doesn't insert as normal
+  this.formatter = null; // function that reformats the input if keypress doesn't insert as normal
 
-  const valid = this.validateElement() && this.hasConfiguration();
+  const configValid = this.validateElement() && this.hasConfiguration();
 
-  if (valid) {
+  if (configValid) {
     if (this.config.pattern) {
-      this.masker = this.getPatternMasker();
-      if (this.config.insertStaticCharacters) {
-        this.replacer = this.getPatternReplacer();
-      }
+      this.validator = this.getPatternValidator();
+      this.formatter = this.getPatternFormatter();
     }
 
     this.setupEvents();
@@ -134,13 +186,14 @@ assign(KeyMask.prototype, {
   getMaskConfiguration,
   validateElement,
   hasConfiguration,
-  getPatternMasker,
-  getPatternReplacer,
+  getPatternFormatter,
+  getPatternValidator,
+  getStringChanges,
   warn,
   setupEvents,
   tearDownEvents,
   destroy,
-  replaceValue,
+  syncValue,
 });
 
 export default KeyMask;

@@ -78,41 +78,40 @@ function getDecomposingRegex(patternParts) {
   return [new RegExp(`${regexString}$`), groupTypes];
 }
 
-function getPossibleString(element, inserted) {
-  const val = element.value;
-  const start = element.selectionStart;
-  const end = element.selectionEnd;
-  return `${val.slice(0, start)}${inserted}${val.slice(end)}`;
-}
-
-// return a function that checks if the current keystroke should be cancelled
-function getPatternMasker() {
-  validatePatternConfig();
+function getPatternValidator() {
   const valid = getValidationRegex(parsePattern(this.config.pattern));
-
-  return (ev) => {
-    return !valid.test(getPossibleString(this.element, ev.key));
-  }
+  return () => { return valid.test(this.element.value); }
 }
 
 // return a function that, if possible, reformats the result of the current keystroke to pass validation
-function getPatternReplacer() {
+function getPatternFormatter() {
   const patternParts = parsePattern(this.config.pattern);
   const valid = getValidationRegex(patternParts);
   const [decomposer, decomposedGroupTypes] = getDecomposingRegex(patternParts);
   const maxDynamicCharacters = patternParts.filter((p) => p.type === 'class').length;
 
-  return (ev) => {
-    const currentString = this.element.value;
+  // finds characters inserted & removed from last value
+  // inserts new characters into set of dynamic characters from previous value, removing any if needed
+  // reformats updated set of dynamic characters into a string based on the pattern
+  // if reformatted string matches pattern return reformatted string and an index following the new characters
+  return (stringChanges) => {
+    const oldString = this.element.oldValue;
+    const {newCharacters, replacedCharacters, prefixSize} = stringChanges;
 
-    // get all dynamic characters out of string
-    const capturedGroups = decomposer.exec(currentString).slice(1).map(m => m.split(''));
+    // find how many dynamic characters were removed during this input value change
+    let removedDynamicCharCount = patternParts.slice(prefixSize, prefixSize + replacedCharacters.length)
+        .reduce((ret, part) => {
+      if (part.type === 'class') { ret++ }
+      return ret;
+    }, 0);
+
+    // get all dynamic characters out of old string
+    const capturedGroups = decomposer.exec(oldString).slice(1).map(m => m.split(''));
     const dynamicCharacters = flatten(capturedGroups.filter((group, i) => decomposedGroupTypes[i] === 'class'));
 
     // since we are splicing into the set of dynamic characters, adjust insertion (selectionStart) position for preceding static characters
     let stringIndex = 0;
-    let selectionStart = this.element.selectionStart;
-    let selectionEnd = this.element.selectionEnd;
+    let selectionStart = this.element.selectionStart - newCharacters.length;
     const insertionPosition = capturedGroups.reduce((ret, group, i) => {
       group.forEach(() => {
         if (decomposedGroupTypes[i] === 'static' && stringIndex < selectionStart) { ret--; }
@@ -121,33 +120,40 @@ function getPatternReplacer() {
       return ret;
     }, selectionStart);
 
-    dynamicCharacters.splice(insertionPosition, selectionEnd - selectionStart, ev.key);
+    dynamicCharacters.splice(insertionPosition, removedDynamicCharCount, ...newCharacters);
 
     // if we've ended up with more characters than we have spaces for, don't bother reformatting
     if (dynamicCharacters.length > maxDynamicCharacters) { return [null, null]; }
 
-    // create a new string by putting the non-fixed chars into non-fixed character positions
+    // create a new string by putting the dynamic chars into appropriate positions
     let index = 0;
-    let nonFixedCount = 0;
-    let newCharPositon = null; // final position of the newly inserted character, used for caret positioning post value replacement
+    let dynamicCount = 0;
+    let interspersedStaticCount = 0; // number of static characters interspersed with the newly inserted characters
+    let finalInsertionIndex = null; // position in finished string of the newly inserted characters, used for caret repositioning
     const reformattedStringChars = [];
-    while (nonFixedCount < dynamicCharacters.length) {
+    while (dynamicCount < dynamicCharacters.length) {
       const part = patternParts[index];
       if (part.type === 'class') {
-        if (nonFixedCount === insertionPosition) { newCharPositon = index; }
-        reformattedStringChars.push(dynamicCharacters[nonFixedCount++]);
+        if (dynamicCount === insertionPosition) { finalInsertionIndex = index; }
+        reformattedStringChars.push(dynamicCharacters[dynamicCount++]);
       }
-      else if (part.type === 'static') { reformattedStringChars.push(part.character); }
+      else if (part.type === 'static') {
+        if (finalInsertionIndex && dynamicCount < insertionPosition + newCharacters.length) {
+          interspersedStaticCount++;
+        }
+        reformattedStringChars.push(part.character);
+      }
       index++;
     }
 
+    const newCaretPosition = finalInsertionIndex + interspersedStaticCount + newCharacters.length;
     const reformattedString = reformattedStringChars.join('');
     if (valid.test(reformattedString)) {
-      return [reformattedString, newCharPositon];
+      return [reformattedString, newCaretPosition];
     }
 
     return [null, null];
   }
 }
 
-export { getPatternMasker as default, getPatternMasker, getPatternReplacer }
+export { getPatternFormatter as default, getPatternFormatter, getPatternValidator }

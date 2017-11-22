@@ -26,6 +26,8 @@
   "dependencies": {
     "can-view-callbacks": "3.x",
     "lodash.assign": "4.x",
+    "lodash.droprightwhile": "^4.6.0",
+    "lodash.dropwhile": "^4.6.0",
     "lodash.escaperegexp": "4.x",
     "lodash.flatten": "4.x"
   },
