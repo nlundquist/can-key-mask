@@ -16,10 +16,6 @@ const characterClasses = {
   'U': new RegExp('[A-Z]'), // any uppercase alpha character
 };
 
-function validatePatternConfig() {
-
-}
-
 // parse pattern into array of per-character regular expressions with additional info
 function parsePattern(pattern) {
   let parts = [];

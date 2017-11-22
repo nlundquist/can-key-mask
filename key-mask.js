@@ -62,7 +62,7 @@ function hasConfiguration() {
 // TODO: could have better naming or remove expectation of 1 character increase?
 // add multiple characters to input
 function syncValue([newValue, newCaretPosition]) {
-  if (newValue) {
+  if (newValue || newValue === '') {
     this.element.value = newValue;
     // happens async as a fix for Android. no obvious issues with doing this, so no browser detection done
     setTimeout(() => this.element.setSelectionRange(newCaretPosition, newCaretPosition), 0);
