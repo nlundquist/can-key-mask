@@ -1,6 +1,6 @@
 {
   "name": "can-key-mask",
-  "version": "1.0.1-5",
+  "version": "1.0.1-6",
   "description": "an input mask that runs on keypress",
   "main": "index.js",
   "scripts": {
