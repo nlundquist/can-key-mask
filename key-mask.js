@@ -64,7 +64,8 @@ function hasConfiguration() {
 function syncValue([newValue, newCaretPosition]) {
   if (newValue) {
     this.element.value = newValue;
-    this.element.setSelectionRange(newCaretPosition, newCaretPosition);
+    // happens async as a fix for Android. no obvious issues with doing this, so no browser detection done
+    setTimeout(() => this.element.setSelectionRange(newCaretPosition, newCaretPosition), 0);
 
     // set flag so synthesized change event for IE is thrown during blur
     // setting element.value prevents IE from throwing a change event as it should
