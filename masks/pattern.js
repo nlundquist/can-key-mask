@@ -105,16 +105,16 @@ function getPatternFormatter() {
     const capturedGroups = decomposer.exec(oldString).slice(1).map(m => m.split(''));
     const dynamicCharacters = flatten(capturedGroups.filter((group, i) => decomposedGroupTypes[i] === 'class'));
 
-    // since we are splicing into the set of dynamic characters, adjust insertion (selectionStart) position for preceding static characters
+    // since we are splicing into the set of dynamic characters, adjust insertion (selectionEnd) position for preceding static characters
     let stringIndex = 0;
-    let selectionStart = this.element.selectionStart - newCharacters.length;
+    let selectionEnd = this.element.selectionEnd - newCharacters.length;
     const insertionPosition = capturedGroups.reduce((ret, group, i) => {
       group.forEach(() => {
-        if (decomposedGroupTypes[i] === 'static' && stringIndex < selectionStart) { ret--; }
+        if (decomposedGroupTypes[i] === 'static' && stringIndex < selectionEnd) { ret--; }
         stringIndex++;
       });
       return ret;
-    }, selectionStart);
+    }, selectionEnd);
 
     dynamicCharacters.splice(insertionPosition, removedDynamicCharCount, ...newCharacters);
 
